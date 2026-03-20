@@ -1,15 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Button } from "react-native";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
+import { useFocusEffect } from "@react-navigation/native";
 
-export default function GererLesJeux({ navigation }) {
-    const [jeux, setJeux] = useState([]);
+export default function GererLesJeux({ navigation }: any) {
+    const [jeux, setJeux] = useState<any[]>([]);
+    const [role, setRole] = useState<string | null>(null);
+
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 navigation.navigate("pageConnexion");
+                return;
+            }
+            try {
+                const userDoc = await getDoc(doc(db, "utilisateurs", user.uid));
+                if (userDoc.exists()) {
+                    setRole(userDoc.data().role);
+                } else {
+                    setRole("inconnu");
+                }
+            } catch (error) {
+                console.log("Erreur lecture role :", error);
             }
         });
         return unsubscribe;
@@ -23,43 +37,62 @@ export default function GererLesJeux({ navigation }) {
         });
     };
 
-    useEffect(() => {
-        const fetchJeux = async () => {
-            const snap = await getDocs(collection(db, "jeux"));
-            const list = snap.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setJeux(list);
-        };
+    const loadJeux = async () => {
+        const snap = await getDocs(collection(db, "jeux"));
+        const list = snap.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+        setJeux(list);
+    };
 
-        fetchJeux();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            loadJeux();
+        }, [])
+    );
 
     return (
         <View style={styles.viewStyle}>
-            <Text style={styles.title}>Gérer les jeux</Text>
+            <Text style={styles.title}>Gérer les jeux {role === "admin" && "(admin)"}</Text>
+            {role === "admin" && (
+                <View style={{ marginBottom: 16 }}>
+                    <Button color="gray" title="Créer un jeu" onPress={() => navigation.navigate("pageDetailJeu")} />
+                </View>
+            )}
             <FlatList
                 data={jeux}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("pageDetailJeu", { jeu: item })}>
                         <Text style={styles.cardTitle}>{item.nom}</Text>
-                        <Text style={styles.cardText}>Genre : {item.genre.libGenre}</Text>
-                        <Text style={styles.cardText}>Plateforme : {item.plateforme.libPlateforme}</Text>
-                        <Text style={styles.cardText}>PEGI : {item.pegi.libPegis}</Text>
+                        <Text style={styles.cardText}>Genre : {item.genre?.libGenre}</Text>
+                        <Text style={styles.cardText}>Plateforme : {item.plateforme?.libPlateforme}</Text>
+                        <Text style={styles.cardText}>PEGI : {item.pegi?.libPegis}</Text>
+                        
+                        {role === "admin" && (
+                            <View style={{ marginTop: 10 }}>
+                                <Button title="Modifier" onPress={() => navigation.navigate("pageDetailJeu", { jeu: item })} />
+                            </View>
+                        )}
                     </TouchableOpacity>
                 )}
             />
-            <Button title="Retour menu" onPress={() => navigation.navigate("pageMenu")} />
-            <Button color="red" title="Quitter" onPress={handleLogout} />
+            <View style={{ marginTop: 10 }}>
+                <Button color="gray" title="Retour menu" onPress={() => navigation.navigate("pageMenu")} />
+            </View>
+            <View style={{ marginTop: 10 }}>
+                <Button color="red" title="Quitter" onPress={handleLogout} />
+            </View>
         </View>
     );
 }
+
 const styles = StyleSheet.create({
     viewStyle: {
         flex: 1,
         padding: 16,
+        paddingTop: 50,
         backgroundColor: "lightgreen",
     },
     title: {

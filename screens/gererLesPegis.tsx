@@ -1,15 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, Button, StyleSheet, FlatList, TouchableOpacity } from "react-native";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function GererLesPegis({ navigation }: any) {
-    const [pegis, setPegis] = useState([]);
+    const [pegis, setPegis] = useState<any[]>([]);
+    const [role, setRole] = useState<string | null>(null);
+
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 navigation.navigate("pageConnexion");
+                return;
+            }
+            try {
+                const userDoc = await getDoc(doc(db, "utilisateurs", user.uid));
+                if (userDoc.exists()) {
+                    setRole(userDoc.data().role);
+                } else {
+                    setRole("inconnu");
+                }
+            } catch (error) {
+                console.log("Erreur lecture role :", error);
             }
         });
         return unsubscribe;
@@ -23,47 +37,54 @@ export default function GererLesPegis({ navigation }: any) {
         });
     };
 
-    useEffect(() => {
-        const fetchPegis = async () => {
-            const pegisCol = collection(db, "Pegis");
-            const pegiSnapshot = await getDocs(pegisCol);
-            const pegiList = pegiSnapshot.docs.map((doc) => doc.data());
-            setPegis(pegiList);
-        };
-        fetchPegis();
-    }, []);
+    const loadPegis = async () => {
+        const querySnapshot = await getDocs(collection(db, "Pegis"));
+        const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setPegis(data);
+    };
 
-    return (<View style={styles.viewStyle}>
-        <Text>Gérer les PEGI</Text>
-        <FlatList
-            data={pegis}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-                <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("pageDetailPegi", { pegi: item })}>
-                    <Text style={styles.cardText}>
-                        ID : {item.idPegis} - {item.libPegi}
-                    </Text>
-                </TouchableOpacity>
+    useFocusEffect(
+        useCallback(() => {
+            loadPegis();
+        }, [])
+    );
+
+    return (
+        <View style={styles.viewStyle}>
+            <Text style={styles.title}>Gérer les PEGI {role === "admin" && "(admin)"}</Text>
+            {role === "admin" && (
+                <Button color="gray" title="Créer un PEGI" onPress={() => navigation.navigate("pageDetailPegi")} />
             )}
-        />
-        <Button
-            color="gray"
-            title="Visualiser les PEGI"
-            onPress={() => navigation.navigate("pageDetailPegi")}
-        />
-        <Button
-            color="gray"
-            title="Retour au menu"
-            onPress={() => navigation.navigate("pageMenu")}
-        />
-        <Button
-            color="red"
-            title="Quitter"
-            onPress={handleLogout}
-        />
-    </View>
+            
+            <FlatList
+                data={pegis}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                    <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("pageDetailPegi", { pegi: item })}>
+                        <Text style={styles.cardText}>
+                            ID : {item.idPegis} - {item.libPegi}
+                        </Text>
+                        {role === "admin" && (
+                            <Button title="Modifier" onPress={() => navigation.navigate("pageDetailPegi", { pegi: item })} />
+                        )}
+                    </TouchableOpacity>
+                )}
+            />
+            
+            <Button
+                color="gray"
+                title="Retour au menu"
+                onPress={() => navigation.navigate("pageMenu")}
+            />
+            <Button
+                color="red"
+                title="Quitter"
+                onPress={handleLogout}
+            />
+        </View>
     );
 }
+
 const styles = StyleSheet.create({
     viewStyle: {
         flex: 1,
@@ -73,26 +94,26 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-
     card: {
         width: "100%",
         backgroundColor: "white",
-        padding: 16, borderRadius: 10,
+        padding: 16, 
+        borderRadius: 10,
         marginBottom: 12,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
-        elevation: 3, // Android
+        elevation: 3,
     },
     cardText: {
         fontSize: 18,
         fontWeight: "bold",
-
+        marginBottom: 10,
     },
-
-    container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-    title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-    item: { fontSize: 18, marginBottom: 10 },
-
+    title: { 
+        fontSize: 24, 
+        fontWeight: "bold", 
+        marginBottom: 20 
+    },
 });

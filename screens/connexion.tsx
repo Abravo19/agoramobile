@@ -9,7 +9,7 @@ export default function Connexion({ navigation }: any) {
     const handleLogin = () => {
         signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                navigation.navigate("pageMenu", { email });
+                navigation.replace("pageMenu");
             })
             .catch((error) => {
                 Alert.alert("Erreur de connexion", error.message);

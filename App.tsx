@@ -15,6 +15,7 @@ import DetailPlateforme from "./screens/detailPlateforme";
 import GererLesJeux from "./screens/gererLesJeux";
 import DetailJeu from "./screens/detailJeu";
 
+
 const Stack = createNativeStackNavigator();
 function MainStack() {
   return (

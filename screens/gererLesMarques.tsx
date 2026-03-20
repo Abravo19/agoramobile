@@ -1,15 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, Button, StyleSheet, FlatList, TouchableOpacity } from "react-native";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function GererLesMarques({ navigation }: any) {
-    const [marques, setMarques] = useState([]);
+    const [marques, setMarques] = useState<any[]>([]);
+    const [role, setRole] = useState<string | null>(null);
+
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 navigation.navigate("pageConnexion");
+                return;
+            }
+            try {
+                const userDoc = await getDoc(doc(db, "utilisateurs", user.uid));
+                if (userDoc.exists()) {
+                    setRole(userDoc.data().role);
+                } else {
+                    setRole("inconnu");
+                }
+            } catch (error) {
+                console.log("Erreur lecture role :", error);
             }
         });
         return unsubscribe;
@@ -23,47 +37,54 @@ export default function GererLesMarques({ navigation }: any) {
         });
     };
 
-    useEffect(() => {
-        const fetchMarques = async () => {
-            const marquesCol = collection(db, "Marques");
-            const marqueSnapshot = await getDocs(marquesCol);
-            const marqueList = marqueSnapshot.docs.map((doc) => doc.data());
-            setMarques(marqueList);
-        };
-        fetchMarques();
-    }, []);
+    const loadMarques = async () => {
+        const querySnapshot = await getDocs(collection(db, "Marques"));
+        const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setMarques(data);
+    };
 
-    return (<View style={styles.viewStyle}>
-        <Text>Gérer les Marques</Text>
-        <FlatList
-            data={marques}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-                <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("pageDetailMarque", { marque: item })}>
-                    <Text style={styles.cardText}>
-                        ID : {item.idMarques} - {item.libMarques}
-                    </Text>
-                </TouchableOpacity>
+    useFocusEffect(
+        useCallback(() => {
+            loadMarques();
+        }, [])
+    );
+
+    return (
+        <View style={styles.viewStyle}>
+            <Text style={styles.title}>Gérer les Marques {role === "admin" && "(admin)"}</Text>
+            {role === "admin" && (
+                <Button color="gray" title="Créer une marque" onPress={() => navigation.navigate("pageDetailMarque")} />
             )}
-        />
-        <Button
-            color="gray"
-            title="Visualiser les marques"
-            onPress={() => navigation.navigate("pageDetailMarque")}
-        />
-        <Button
-            color="gray"
-            title="Retour au menu"
-            onPress={() => navigation.navigate("pageMenu")}
-        />
-        <Button
-            color="red"
-            title="Quitter"
-            onPress={handleLogout}
-        />
-    </View>
+            
+            <FlatList
+                data={marques}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                    <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("pageDetailMarque", { marque: item })}>
+                        <Text style={styles.cardText}>
+                            ID : {item.idMarques} - {item.libMarques}
+                        </Text>
+                        {role === "admin" && (
+                            <Button title="Modifier" onPress={() => navigation.navigate("pageDetailMarque", { marque: item })} />
+                        )}
+                    </TouchableOpacity>
+                )}
+            />
+            
+            <Button
+                color="gray"
+                title="Retour au menu"
+                onPress={() => navigation.navigate("pageMenu")}
+            />
+            <Button
+                color="red"
+                title="Quitter"
+                onPress={handleLogout}
+            />
+        </View>
     );
 }
+
 const styles = StyleSheet.create({
     viewStyle: {
         flex: 1,
@@ -73,26 +94,26 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-
     card: {
         width: "100%",
         backgroundColor: "white",
-        padding: 16, borderRadius: 10,
+        padding: 16, 
+        borderRadius: 10,
         marginBottom: 12,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
-        elevation: 3, // Android
+        elevation: 3,
     },
     cardText: {
         fontSize: 18,
         fontWeight: "bold",
-
+        marginBottom: 10,
     },
-
-    container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-    title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-    item: { fontSize: 18, marginBottom: 10 },
-
+    title: { 
+        fontSize: 24, 
+        fontWeight: "bold", 
+        marginBottom: 20 
+    },
 });
