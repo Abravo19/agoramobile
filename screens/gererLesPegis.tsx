@@ -53,7 +53,9 @@ export default function GererLesPegis({ navigation }: any) {
         <View style={styles.viewStyle}>
             <Text style={styles.title}>Gérer les PEGI {role === "admin" && "(admin)"}</Text>
             {role === "admin" && (
-                <Button color="gray" title="Créer un PEGI" onPress={() => navigation.navigate("pageDetailPegi")} />
+                <View style={{ marginBottom: 16 }}>
+                    <Button color="gray" title="Créer un PEGI" onPress={() => navigation.navigate("pageDetailPegi")} />
+                </View>
             )}
             
             <FlatList
@@ -65,22 +67,20 @@ export default function GererLesPegis({ navigation }: any) {
                             ID : {item.idPegis} - {item.libPegi}
                         </Text>
                         {role === "admin" && (
-                            <Button title="Modifier" onPress={() => navigation.navigate("pageDetailPegi", { pegi: item })} />
+                            <View style={{ marginTop: 10 }}>
+                                <Button title="Modifier" onPress={() => navigation.navigate("pageDetailPegi", { pegi: item })} />
+                            </View>
                         )}
                     </TouchableOpacity>
                 )}
             />
             
-            <Button
-                color="gray"
-                title="Retour au menu"
-                onPress={() => navigation.navigate("pageMenu")}
-            />
-            <Button
-                color="red"
-                title="Quitter"
-                onPress={handleLogout}
-            />
+            <View style={{ marginTop: 10 }}>
+                <Button color="gray" title="Retour au menu" onPress={() => navigation.navigate("pageMenu")} />
+            </View>
+            <View style={{ marginTop: 10 }}>
+                <Button color="red" title="Quitter" onPress={handleLogout} />
+            </View>
         </View>
     );
 }
@@ -88,32 +88,25 @@ export default function GererLesPegis({ navigation }: any) {
 const styles = StyleSheet.create({
     viewStyle: {
         flex: 1,
+        padding: 16,
         paddingTop: 50,
-        paddingHorizontal: 12,
         backgroundColor: "lightgreen",
-        alignItems: "center",
-        justifyContent: "center",
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 16,
+        alignSelf: "center",
     },
     card: {
-        width: "100%",
         backgroundColor: "white",
         padding: 16, 
         borderRadius: 10,
         marginBottom: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
         elevation: 3,
     },
     cardText: {
         fontSize: 18,
         fontWeight: "bold",
-        marginBottom: 10,
-    },
-    title: { 
-        fontSize: 24, 
-        fontWeight: "bold", 
-        marginBottom: 20 
     },
 });

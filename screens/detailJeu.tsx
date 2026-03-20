@@ -6,7 +6,7 @@ import { addDoc, updateDoc, deleteDoc, doc, collection, getDocs, query, orderBy,
 
 export default function DetailJeu({ route, navigation }: any) {
     const jeu = route?.params?.jeu;
-    
+
     // Primitive states mapped to jeu's shape
     const [nom, setNom] = useState(jeu?.nom || "");
     const [prix, setPrix] = useState(jeu?.prix !== undefined ? jeu.prix.toString() : "");
@@ -69,14 +69,13 @@ export default function DetailJeu({ route, navigation }: any) {
         try {
             if (!nom.trim()) return;
             const newJeu = buildJeuObject();
-            
-            // To maintain numeric id sequence if Jeux relies on it
+
             const q = query(collection(db, "jeux"), orderBy("id", "desc"), limit(1));
             const querySnapshot = await getDocs(q);
             let nextId = 1;
             if (!querySnapshot.empty) {
                 const lastDoc = querySnapshot.docs[0];
-                if(lastDoc.data().id !== undefined) {
+                if (lastDoc.data().id !== undefined) {
                     nextId = lastDoc.data().id + 1;
                 }
             }
@@ -114,11 +113,11 @@ export default function DetailJeu({ route, navigation }: any) {
     return (
         <ScrollView contentContainerStyle={styles.viewStyle}>
             <Text style={styles.title}>{jeu ? "Modifier le jeu" : "Créer un jeu"}</Text>
-            
+
             <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholder="Nom du jeu" />
             <TextInput style={styles.input} value={prix} onChangeText={setPrix} placeholder="Prix (€)" keyboardType="numeric" />
             <TextInput style={styles.input} value={dateParution} onChangeText={setDateParution} placeholder="Date de parution" />
-            
+
             <Text style={styles.subtitle}>Relations</Text>
             <TextInput style={styles.input} value={libGenre} onChangeText={setLibGenre} placeholder="Genre" />
             <TextInput style={styles.input} value={libPlateforme} onChangeText={setLibPlateforme} placeholder="Plateforme" />
@@ -140,11 +139,11 @@ export default function DetailJeu({ route, navigation }: any) {
                         <Button title="Créer" onPress={handleCreate} />
                     </View>
                 )}
-                
+
                 <View style={styles.buttonSpacing}>
                     <Button
                         color="gray"
-                        title="Retour"
+                        title="Retour à la liste des jeux"
                         onPress={() => navigation.navigate("pageGererLesJeux")}
                     />
                 </View>

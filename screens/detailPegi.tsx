@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, StyleSheet, TextInput } from "react-native";
+import { View, Text, Button, StyleSheet, TextInput, ScrollView } from "react-native";
 import { auth, db } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 import { addDoc, updateDoc, deleteDoc, doc, collection, getDocs, query, orderBy, limit } from "firebase/firestore";
@@ -80,7 +80,7 @@ export default function DetailPegi({ route, navigation }: any) {
     };
 
     return (
-        <View style={styles.viewStyle}>
+        <ScrollView contentContainerStyle={styles.viewStyle}>
             <Text style={styles.title}>{pegi ? "Modifier le PEGI" : "Créer un PEGI"}</Text>
             {pegi && (
                 <>
@@ -88,44 +88,47 @@ export default function DetailPegi({ route, navigation }: any) {
                     <Text style={styles.title}>ID : {pegi.idPegis}</Text>
                 </>
             )}
-            <>
-                <TextInput 
-                    style={styles.input} 
-                    value={libPegi} 
-                    onChangeText={setLibPegi} 
-                    placeholder="Nom du PEGI" 
-                />
+            <TextInput 
+                style={styles.input} 
+                value={libPegi} 
+                onChangeText={setLibPegi} 
+                placeholder="Nom du PEGI" 
+            />
+
+            <View style={styles.buttonContainer}>
                 {pegi ? (
                     <>
-                        <Button title="Modifier" onPress={handleUpdate} />
-                        <Button title="Supprimer" color="red" onPress={handleDelete} />
+                        <View style={styles.buttonSpacing}>
+                            <Button title="Modifier" onPress={handleUpdate} />
+                        </View>
+                        <View style={styles.buttonSpacing}>
+                            <Button title="Supprimer" color="red" onPress={handleDelete} />
+                        </View>
                     </>
                 ) : (
-                    <Button title="Créer" onPress={handleCreate} />
+                    <View style={styles.buttonSpacing}>
+                        <Button title="Créer" onPress={handleCreate} />
+                    </View>
                 )}
-                <Button
-                    color="gray"
-                    title="Retour à la liste des PEGI"
-                    onPress={() => navigation.navigate("pageGererLesPegis")}
-                />
-            </>
-            <Button
-                color="red"
-                title="Quitter"
-                onPress={handleLogout}
-            />
-        </View>
+                <View style={styles.buttonSpacing}>
+                    <Button color="gray" title="Retour à la liste des PEGI" onPress={() => navigation.navigate("pageGererLesPegis")} />
+                </View>
+                <View style={styles.buttonSpacing}>
+                    <Button color="red" title="Quitter" onPress={handleLogout} />
+                </View>
+            </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     viewStyle: {
-        flex: 1,
+        flexGrow: 1,
         paddingTop: 50,
+        paddingBottom: 50,
         paddingHorizontal: 12,
-        backgroundColor: "lightblue",
+        backgroundColor: "lightgreen",
         alignItems: "center",
-        justifyContent: "center",
     },
     title: {
         fontSize: 26,
@@ -137,8 +140,15 @@ const styles = StyleSheet.create({
         width: "80%",
         borderColor: "gray",
         borderWidth: 1,
-        marginBottom: 20,
+        marginBottom: 15,
         paddingHorizontal: 10,
         backgroundColor: "white",
     },
+    buttonContainer: {
+        width: "80%",
+        marginTop: 10,
+    },
+    buttonSpacing: {
+        marginBottom: 15,
+    }
 });

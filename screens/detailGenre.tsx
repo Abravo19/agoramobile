@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, StyleSheet, TextInput } from "react-native";
+import { View, Text, Button, StyleSheet, TextInput, ScrollView } from "react-native";
 import { auth } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 import { db } from "../firebaseConfig";
@@ -84,7 +84,7 @@ export default function DetailGenre({ route, navigation }: any) {
     };
 
     return (
-        <View style={styles.viewStyle}>
+        <ScrollView contentContainerStyle={styles.viewStyle}>
             <Text style={styles.title}>{genre ? "Modifier le genre" : "Créer un genre"}</Text>
             {genre && (
                 <>
@@ -92,36 +92,46 @@ export default function DetailGenre({ route, navigation }: any) {
                     <Text style={styles.title}>ID : {genre.idGenre}</Text>
                 </>
             )}
-            {(
-                <>
-                    <TextInput style={styles.input} value={libGenre} onChangeText={setLibGenre} placeholder="Nom du genre" />
-                    {genre ? (
-                        <>
-                            <Button title="Modifier" onPress={handleUpdate} />
-                            <Button title="Supprimer" color="red" onPress={handleDelete} />
-                        </>
-                    ) : (
-                        <Button title="Créer" onPress={handleCreate} />
-                    )}
-                    <Button color="gray" title="Retour à la liste des genres" onPress={() => navigation.navigate("pageGererLesGenres")} />
-                </>
-            )}
-            <Button
-                color="red"
-                title="Quitter"
-                onPress={handleLogout}
+            <TextInput 
+                style={styles.input} 
+                value={libGenre} 
+                onChangeText={setLibGenre} 
+                placeholder="Nom du genre" 
             />
-        </View>
+
+            <View style={styles.buttonContainer}>
+                {genre ? (
+                    <>
+                        <View style={styles.buttonSpacing}>
+                            <Button title="Modifier" onPress={handleUpdate} />
+                        </View>
+                        <View style={styles.buttonSpacing}>
+                            <Button title="Supprimer" color="red" onPress={handleDelete} />
+                        </View>
+                    </>
+                ) : (
+                    <View style={styles.buttonSpacing}>
+                        <Button title="Créer" onPress={handleCreate} />
+                    </View>
+                )}
+                <View style={styles.buttonSpacing}>
+                    <Button color="gray" title="Retour à la liste des genres" onPress={() => navigation.navigate("pageGererLesGenres")} />
+                </View>
+                <View style={styles.buttonSpacing}>
+                    <Button color="red" title="Quitter" onPress={handleLogout} />
+                </View>
+            </View>
+        </ScrollView>
     );
 }
 const styles = StyleSheet.create({
     viewStyle: {
-        flex: 1,
+        flexGrow: 1,
         paddingTop: 50,
+        paddingBottom: 50,
         paddingHorizontal: 12,
         backgroundColor: "lightgreen",
         alignItems: "center",
-        justifyContent: "center",
     },
     title: {
         fontSize: 26,
@@ -137,8 +147,15 @@ const styles = StyleSheet.create({
         width: "80%",
         borderColor: "gray",
         borderWidth: 1,
-        marginBottom: 20,
+        marginBottom: 15,
         paddingHorizontal: 10,
         backgroundColor: "white",
     },
+    buttonContainer: {
+        width: "80%",
+        marginTop: 10,
+    },
+    buttonSpacing: {
+        marginBottom: 15,
+    }
 });

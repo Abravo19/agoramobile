@@ -26,27 +26,6 @@ export default function GererLesGenres({ navigation }: any) {
         });
     };
 
-    useEffect(() => {
-        const fetchGenres = async () => {
-            const genresCol = collection(db, "genres");
-            const genreSnapshot = await getDocs(genresCol);
-            const genreList = genreSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setGenres(genreList);
-        };
-        fetchGenres();
-    }, []);
-
-    const loadGenres = async () => {
-        const querySnapshot = await getDocs(collection(db, "genres"));
-        const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setGenres(data);
-    };
-
-    useFocusEffect(
-        useCallback(() => {
-            loadGenres();
-        }, [])
-    );
     const [role, setRole] = useState(null);
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -75,66 +54,87 @@ export default function GererLesGenres({ navigation }: any) {
         return unsubscribe;
     }, []);
 
-    return (<View style={styles.viewStyle}>
-        <Text>Gérer les Genres {role === "admin" && "(admin)"}</Text>
-        {role === "admin" && <Button color="gray" title="Créer un genre" onPress={() => navigation.navigate("pageDetailGenre")} />}
-        <FlatList
-            data={genres}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-                <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("pageDetailGenre", { genre: item })}>
-                    <Text style={styles.cardText}>
-                        ID : {item.idGenre} - {item.libGenre}
-                    </Text>
-                    {role === "admin" && <Button title="Modifier" onPress={() => navigation.navigate("pageDetailGenre", { genre: item })} />}
-                </TouchableOpacity>
+    const loadGenres = async () => {
+        const querySnapshot = await getDocs(collection(db, "genres"));
+        const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setGenres(data);
+    };
 
+    useFocusEffect(
+        useCallback(() => {
+            loadGenres();
+        }, [])
+    );
 
+    return (
+        <View style={styles.viewStyle}>
+            <Text style={styles.title}>Gérer les Genres {role === "admin" && "(admin)"}</Text>
+            {role === "admin" && (
+                <View style={{ marginBottom: 16 }}>
+                    <Button color="gray" title="Créer un genre" onPress={() => navigation.navigate("pageDetailGenre")} />
+                </View>
             )}
-        />
+            <FlatList
+                data={genres}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                    <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("pageDetailGenre", { genre: item })}>
+                        <Text style={styles.cardTitle}>{item.libGenre}</Text>
+                        <Text style={styles.cardText}>
+                            ID : {item.idGenre}
+                        </Text>
+                        {role === "admin" && (
+                            <View style={{ marginTop: 10 }}>
+                                <Button title="Modifier" onPress={() => navigation.navigate("pageDetailGenre", { genre: item })} />
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                )}
+            />
 
-        <Button
-            color="gray"
-            title="Retour au menu"
-            onPress={() => navigation.navigate("pageMenu")}
-        />
-        <Button
-            color="red"
-            title="Quitter"
-            onPress={handleLogout}
-        />
-    </View>
+            <View style={{ marginTop: 10 }}>
+                <Button
+                    color="gray"
+                    title="Retour au menu"
+                    onPress={() => navigation.navigate("pageMenu")}
+                />
+            </View>
+            <View style={{ marginTop: 10 }}>
+                <Button
+                    color="red"
+                    title="Quitter"
+                    onPress={handleLogout}
+                />
+            </View>
+        </View>
     );
 }
 const styles = StyleSheet.create({
     viewStyle: {
         flex: 1,
+        padding: 16,
         paddingTop: 50,
-        paddingHorizontal: 12,
         backgroundColor: "lightgreen",
-        alignItems: "center",
-        justifyContent: "center",
     },
-
+    title: {
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 16,
+        alignSelf: "center",
+    },
     card: {
-        width: "100%",
         backgroundColor: "white",
-        padding: 16, borderRadius: 10,
+        padding: 16,
+        borderRadius: 10,
         marginBottom: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3, // Android
+        elevation: 3,
     },
-    cardText: {
+    cardTitle: {
         fontSize: 18,
         fontWeight: "bold",
-
     },
-
-    container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-    title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-    item: { fontSize: 18, marginBottom: 10 },
-
+    cardText: {
+        fontSize: 14,
+        marginTop: 4,
+    },
 });

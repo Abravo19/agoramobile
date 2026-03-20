@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, StyleSheet, TextInput } from "react-native";
+import { View, Text, Button, StyleSheet, TextInput, ScrollView } from "react-native";
 import { auth, db } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 import { addDoc, updateDoc, deleteDoc, doc, collection, getDocs, query, orderBy, limit } from "firebase/firestore";
@@ -80,7 +80,7 @@ export default function DetailMarque({ route, navigation }: any) {
     };
 
     return (
-        <View style={styles.viewStyle}>
+        <ScrollView contentContainerStyle={styles.viewStyle}>
             <Text style={styles.title}>{marque ? "Modifier la marque" : "Créer une marque"}</Text>
             {marque && (
                 <>
@@ -88,44 +88,47 @@ export default function DetailMarque({ route, navigation }: any) {
                     <Text style={styles.title}>ID : {marque.idMarques}</Text>
                 </>
             )}
-            <>
-                <TextInput 
-                    style={styles.input} 
-                    value={libMarques} 
-                    onChangeText={setLibMarques} 
-                    placeholder="Nom de la marque" 
-                />
+            <TextInput 
+                style={styles.input} 
+                value={libMarques} 
+                onChangeText={setLibMarques} 
+                placeholder="Nom de la marque" 
+            />
+
+            <View style={styles.buttonContainer}>
                 {marque ? (
                     <>
-                        <Button title="Modifier" onPress={handleUpdate} />
-                        <Button title="Supprimer" color="red" onPress={handleDelete} />
+                        <View style={styles.buttonSpacing}>
+                            <Button title="Modifier" onPress={handleUpdate} />
+                        </View>
+                        <View style={styles.buttonSpacing}>
+                            <Button title="Supprimer" color="red" onPress={handleDelete} />
+                        </View>
                     </>
                 ) : (
-                    <Button title="Créer" onPress={handleCreate} />
+                    <View style={styles.buttonSpacing}>
+                        <Button title="Créer" onPress={handleCreate} />
+                    </View>
                 )}
-                <Button
-                    color="gray"
-                    title="Retour à la liste des marques"
-                    onPress={() => navigation.navigate("pageGererLesMarques")}
-                />
-            </>
-            <Button
-                color="red"
-                title="Quitter"
-                onPress={handleLogout}
-            />
-        </View>
+                <View style={styles.buttonSpacing}>
+                    <Button color="gray" title="Retour à la liste des marques" onPress={() => navigation.navigate("pageGererLesMarques")} />
+                </View>
+                <View style={styles.buttonSpacing}>
+                    <Button color="red" title="Quitter" onPress={handleLogout} />
+                </View>
+            </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     viewStyle: {
-        flex: 1,
+        flexGrow: 1,
         paddingTop: 50,
+        paddingBottom: 50,
         paddingHorizontal: 12,
         backgroundColor: "lightgreen",
         alignItems: "center",
-        justifyContent: "center",
     },
     title: {
         fontSize: 26,
@@ -137,8 +140,15 @@ const styles = StyleSheet.create({
         width: "80%",
         borderColor: "gray",
         borderWidth: 1,
-        marginBottom: 20,
+        marginBottom: 15,
         paddingHorizontal: 10,
         backgroundColor: "white",
     },
+    buttonContainer: {
+        width: "80%",
+        marginTop: 10,
+    },
+    buttonSpacing: {
+        marginBottom: 15,
+    }
 });
